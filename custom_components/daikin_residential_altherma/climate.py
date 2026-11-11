@@ -3,24 +3,23 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
+from homeassistant.components.climate import (
+    PLATFORM_SCHEMA,
+    ClimateEntity,
+    ClimateEntityFeature,
+    HVACMode,
+)
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
-    ATTR_PRESET_MODE, # DAMIANO lasciare
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
+    ATTR_PRESET_MODE,
     PRESET_AWAY,
     PRESET_COMFORT,
     PRESET_ECO,
     PRESET_NONE,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_PRESET_MODE,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
 )
-from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, UnitOfTemperature
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -51,10 +50,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 PRESET_MODES = {PRESET_COMFORT, PRESET_ECO, PRESET_AWAY}
 
 HA_HVAC_TO_DAIKIN = {
-    HVAC_MODE_COOL: "cooling",
-    HVAC_MODE_HEAT: "heating",
-    HVAC_MODE_HEAT_COOL: "auto",
-    HVAC_MODE_OFF: "off",
+    HVACMode.COOL: "cooling",
+    HVACMode.HEAT: "heating",
+    HVACMode.HEAT_COOL: "auto",
+    HVACMode.OFF: "off",
 }
 
 HA_ATTR_TO_DAIKIN = {
@@ -106,7 +105,7 @@ class DaikinClimate(ClimateEntity):
             if device.getData(ATTR_TARGET_LEAVINGWATER_TEMPERATURE) is not None:
                 tempSettable = device.getData(ATTR_TARGET_LEAVINGWATER_TEMPERATURE)["settable"]
         if tempSettable:
-            self._supported_features = SUPPORT_TARGET_TEMPERATURE
+            self._supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
         _LOGGER.info("Support features %s for controlMode %s", self._supported_features, controlMode)
 
@@ -116,7 +115,7 @@ class DaikinClimate(ClimateEntity):
             support_preset = self._device.support_preset_mode(mode)
             if support_preset:
                 self._supported_preset_modes.append(mode)
-                self._supported_features |= SUPPORT_PRESET_MODE
+                self._supported_features |= ClimateEntityFeature.PRESET_MODE
             _LOGGER.info("Support_preset_mode {}: {}".format(mode,support_preset))
 
     async def _set(self, settings):
@@ -185,7 +184,7 @@ class DaikinClimate(ClimateEntity):
     @property
     def temperature_unit(self):
         """Return the unit of measurement which this thermostat uses."""
-        return TEMP_CELSIUS
+        return UnitOfTemperature.CELSIUS
 
     @property
     def current_temperature(self):

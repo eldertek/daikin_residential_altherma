@@ -87,10 +87,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     devices = await daikin_api.getCloudDevices()
     hass.data[DOMAIN] = {DAIKIN_API: daikin_api, DAIKIN_DEVICES: devices}
 
-    for component in COMPONENT_TYPES:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    await hass.config_entries.async_forward_entry_setups(entry, COMPONENT_TYPES)
     return True
 
 
